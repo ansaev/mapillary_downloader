@@ -1,0 +1,3 @@
+config = {
+    "CLIENT_ID": "PRINT_YOUR_MAPILLARY_KEY",
+}
