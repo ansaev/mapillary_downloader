@@ -20,7 +20,8 @@ class MapillaryApi(object):
     @staticmethod
     @gen.coroutine
     def get_sequence(sequence_id):
-        url = MapillaryApi.MAPIllARY_URL_V1 + MapillaryApi.SEQUENCE_PATH + sequence_id
+        url = MapillaryApi.MAPIllARY_URL_V2 + MapillaryApi.SEQUENCE_PATH + sequence_id + "?" \
+              + MapillaryApi.CLIENT_PARAM + "=" + config['CLIENT_ID']
         req = AsyncHTTPClient()
         out = yield req.fetch(url)
         raise Return(out)

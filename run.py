@@ -7,6 +7,7 @@ from tornado import gen
 
 DOWNLOAD_SEQUENCES_PATH = 'downloads/'
 IMAGE_EXTENSION = ".jpg"
+INFO_FILE_EXTENSION = '.json'
 
 
 class SequenceHandler(tornado.web.RequestHandler):
@@ -20,22 +21,29 @@ class SequenceHandler(tornado.web.RequestHandler):
         json_response = json.loads(sequence_response.body)
         skey = json_response['key']
         dir_path = DOWNLOAD_SEQUENCES_PATH+skey+"/"
+        # create directories if needed
         try:
             os.makedirs(dir_path)
         except OSError:
             pass
+        # save sequence info in file
+        sequence_info_path = DOWNLOAD_SEQUENCES_PATH + skey + INFO_FILE_EXTENSION
+        with open(sequence_info_path, "w") as f:
+            f.write(sequence_response.body)
         image_count = 0
-        for image_key_info in json_response['map_images']:
+        for image_key in json_response['keys']:
             # write info in file
-            image_info_path = dir_path + str(image_count)
+            image_info_path = dir_path + str(image_count) + INFO_FILE_EXTENSION
             image_path = dir_path + str(image_count) + IMAGE_EXTENSION
-            image_info_response = yield MapillaryApi.get_image_info(image_id=image_key_info['key'])
-            with open(image_info_path, "w") as f:
-                f.write(image_info_response.body)
+            if not os.path.isfile(image_info_path):
+                image_info_response = yield MapillaryApi.get_image_info(image_id=image_key)
+                with open(image_info_path, "w") as f:
+                    f.write(image_info_response.body)
             # download image
-            image_file_response = yield MapillaryApi.get_image(image_key_info['key'])
-            with open(image_path, "w") as f:
-                f.write(image_file_response.body)
+            if not os.path.isfile(image_path):
+                image_file_response = yield MapillaryApi.get_image(image_id=image_key)
+                with open(image_path, "w") as f:
+                    f.write(image_file_response.body)
             image_count += 1
         self.write("all done!")
 
