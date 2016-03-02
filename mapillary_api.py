@@ -38,7 +38,7 @@ class MapillaryApi(object):
     @gen.coroutine
     def get_image_info_extra(image_id):
         url = MapillaryApi.MAPIllARY_URL_V2 + MapillaryApi.IMAGE_PATH + image_id + MapillaryApi.OBJECTS_ON_IM_PARAM\
-              + "?" + MapillaryApi.CLIENT_PARAM + "=" + CLIENT_ID
+              + "?" + MapillaryApi.CLIENT_PARAM + "=" + config['CLIENT_ID']
         req = AsyncHTTPClient()
         out = yield req.fetch(url)
         raise Return(out)
@@ -46,7 +46,7 @@ class MapillaryApi(object):
     @staticmethod
     @gen.coroutine
     def get_image(image_id, version=DEFAULT_IMAGE_VERSION):
-        url = MapillaryApi.IMAGE_BANK_URL + image_id + "/" +version
+        url = MapillaryApi.IMAGE_BANK_URL + image_id + "/" + version
         req = AsyncHTTPClient()
         out = yield req.fetch(url)
         raise Return(out)
