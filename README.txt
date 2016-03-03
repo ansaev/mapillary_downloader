@@ -7,8 +7,12 @@ $ pip install -r requirements.txt
  Run:
 
  in config.py type your CLIENT_ID in dict config. You can find your CLIENT_ID
- in settings on your maplillary account
- python run.py
+ in settings on your maplillary account. More information about it you can find here
+ https://a.mapillary.com/#client_id
+
+ To run in console input
+ $ cd /path/to/application
+ $ python run.py
 
  Methodths:
 
