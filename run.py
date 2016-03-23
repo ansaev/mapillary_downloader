@@ -35,6 +35,8 @@ class SequenceHandler(tornado.web.RequestHandler):
                 f.write('failed to get sequence info: ' + str(e) + " for the adress: " + e.response.request.url)
             self.send_error(404)
             return
+        self.write("start download!")
+        self.finish()
         image_count = 0
         if sequence_response:
             json_response = json.loads(sequence_response.body)
@@ -64,8 +66,6 @@ class SequenceHandler(tornado.web.RequestHandler):
                         print('failed to get image: ' + str(image_error))
                         f.write('failed to get image: ' + str(image_error) + " for the adress: " + image_info_error.response.request.url)
             image_count += 1
-
-        self.write("all done!")
 
 
 def make_app():
