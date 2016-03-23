@@ -4,6 +4,7 @@ import json
 import os
 from mapillary_api import MapillaryApi
 from tornado import gen
+from zipfile import *
 
 DOWNLOAD_SEQUENCES_PATH = 'downloads/'
 IMAGE_EXTENSION = ".jpg"
@@ -26,6 +27,12 @@ class SequenceHandler(tornado.web.RequestHandler):
             os.makedirs(dir_path)
         except OSError:
             pass
+        # create zip
+        zip_path = DOWNLOAD_SEQUENCES_PATH + skey + ".zip"
+        if not os.path.isfile(zip_path):
+            z = ZipFile(zip_path, 'w')
+        else:
+            z = None
         # save sequence info in file
         sequence_info_path = DOWNLOAD_SEQUENCES_PATH + skey + INFO_FILE_EXTENSION
         with open(sequence_info_path, "w") as f:
@@ -37,15 +44,23 @@ class SequenceHandler(tornado.web.RequestHandler):
             image_path = dir_path + str(image_count) + IMAGE_EXTENSION
             if not os.path.isfile(image_info_path):
                 image_info_response = yield MapillaryApi.get_image_info(image_id=image_key)
+                z.writestr(image_info_path, image_info_response.body)
                 with open(image_info_path, "w") as f:
                     f.write(image_info_response.body)
             # download image
             if not os.path.isfile(image_path):
                 image_file_response = yield MapillaryApi.get_image(image_id=image_key)
+                z.writestr(image_path, image_file_response.body)
                 with open(image_path, "w") as f:
                     f.write(image_file_response.body)
             image_count += 1
         self.write("all done!")
+        if z:
+            z.close()
+        self.write("<br/> zip created!")
+        self.flush()
+        with open(zip_path, "r") as f:
+            self.write(f.read())
 
 
 def make_app():
