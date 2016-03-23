@@ -70,7 +70,7 @@ class SequenceHandler(tornado.web.RequestHandler):
 
 def make_app():
     return tornado.web.Application([
-        (r"/sequence/(\w+)", SequenceHandler),
+        (r"/sequence/(.*)", SequenceHandler),
     ])
 
 if __name__ == "__main__":
