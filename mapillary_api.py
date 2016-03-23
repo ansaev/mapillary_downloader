@@ -13,6 +13,7 @@ class MapillaryApi(object):
     IMAGE_PATH = 'im/'
     CLIENT_PARAM = "client_id"
     OBJECTS_ON_IM_PARAM = '/or'
+    TRYINGS = 5
 
     def __init__(self):
         pass
@@ -24,6 +25,11 @@ class MapillaryApi(object):
               + MapillaryApi.CLIENT_PARAM + "=" + config['CLIENT_ID']
         req = AsyncHTTPClient()
         out = yield req.fetch(url)
+        if not(out.code is 200 or out.code is 404):
+            for i in xrange(MapillaryApi.TRYINGS):
+                out = yield req.fetch(url)
+                if out.code is 200 or out.code is 404:
+                    break
         raise Return(out)
 
     @staticmethod
@@ -33,6 +39,11 @@ class MapillaryApi(object):
               + MapillaryApi.CLIENT_PARAM + "=" + config['CLIENT_ID']
         req = AsyncHTTPClient()
         out = yield req.fetch(url)
+        if not(out.code is 200 or out.code is 404):
+            for i in xrange(MapillaryApi.TRYINGS):
+                out = yield req.fetch(url)
+                if out.code is 200 or out.code is 404:
+                    break
         raise Return(out)
 
     @staticmethod
@@ -42,6 +53,11 @@ class MapillaryApi(object):
               + "?" + MapillaryApi.CLIENT_PARAM + "=" + config['CLIENT_ID']
         req = AsyncHTTPClient()
         out = yield req.fetch(url)
+        if not(out.code is 200 or out.code is 404):
+            for i in xrange(MapillaryApi.TRYINGS):
+                out = yield req.fetch(url)
+                if out.code is 200 or out.code is 404:
+                    break
         raise Return(out)
 
     @staticmethod
@@ -50,6 +66,11 @@ class MapillaryApi(object):
         url = MapillaryApi.IMAGE_BANK_URL + image_id + "/" + version
         req = AsyncHTTPClient()
         out = yield req.fetch(url)
+        if not(out.code is 200 or out.code is 404):
+            for i in xrange(MapillaryApi.TRYINGS):
+                out = yield req.fetch(url)
+                if out.code is 200 or out.code is 404:
+                    break
         raise Return(out)
 
 
