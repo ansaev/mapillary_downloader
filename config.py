@@ -1,3 +1,6 @@
 config = {
     "CLIENT_ID": "PRINT_YOUR_MAPILLARY_KEY",
 }
+DOWNLOAD_SEQUENCES_PATH = 'downloads/'
+IMAGE_EXTENSION = ".jpg"
+INFO_FILE_EXTENSION = '.json'

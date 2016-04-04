@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Download sequence {{sequence_id}}</title>
+    <script type="text/javascript">var client_id="{{client_id}}";</script>
+</head>
+<body>
+<h1>Download sequence {{sequence_id}}</h1>
+<p>images:
+<ul>
+    <li>downloaded: <span id="downloaded_images">{{images['downloaded']}}</span></li>
+    <li>failed: <span id="failed_images">{{images['failed']}}</span></li>
+    <li>to download: <span>{{images['to_download']}}</span></li>
+</ul>
+</p>
+<p>image information files:
+<ul>
+    <li>downloaded: <span id="downloaded_infos">{{image_infos['downloaded']}}</span></li>
+    <li>failed: <span id="failed_infos">{{image_infos['failed']}}</span></li>
+    <li>to download: <span>{{image_infos['to_download']}}</span></li>
+</ul>
+</p>
+<!--<script type="text/javascript" src="download_progress_synhronize.js"></script>-->
+<script type="text/javascript">
+var ws = new WebSocket("ws://localhost:8888/download_progress/"+client_id);
+var downloaded_images = document.getElementById('downloaded_images');
+var failed_images = document.getElementById('failed_images');
+var downloaded_infos = document.getElementById('downloaded_infos');
+var failed_infos = document.getElementById('failed_infos');
+ws.onmessage = function (evt) {
+    console.log(evt.data)
+    var data = JSON.parse(evt.data)
+    console.log(evt.data, data)
+    downloaded_images.innerHTML = data.images.downloaded;
+    failed_images.innerHTML = data.images.failed;
+    downloaded_infos.innerHTML = data.image_infos.downloaded;
+    failed_infos.innerHTML = data.image_infos.failed;
+};
+</script>
+</body>
+</html>
