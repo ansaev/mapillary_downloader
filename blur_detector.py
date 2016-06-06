@@ -67,7 +67,8 @@ def find_blur(image, row_len, cell_len, step):
 
     # return image
 
-def minus_trshhold(grey_img, apply_img,trashhold, param2):
+def minus_trshhold_white(grey_img, trashhold, param2, apply_img=None):
+    apply_img = grey_img if apply_img is None else apply_img
     adaptive = cv2.adaptiveThreshold(grey_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, trashhold, param2)
     cv2.imshow('adaptive_'+str(trashhold), adaptive)
 
@@ -92,16 +93,23 @@ def minus_trshhold_black(grey_img, trashhold, param2):
     return minus_img
 
 # read img
-image_src = cv2.imread('2.jpg')
+image_src = cv2.imread('6.jpg')
 # make img grey
 grey_img = cv2.cvtColor(image_src, cv2.COLOR_BGR2GRAY)
 cv2.imshow('grey_img', grey_img)
+
 # minus black background
 minus_img = minus_trshhold_black(grey_img=grey_img,trashhold=221, param2=-5)
-cv2.imshow('minus_img', minus_img)
-# minus background 2
-minus_img2 = minus_trshhold(grey_img=grey_img, apply_img=minus_img,trashhold=4401, param2=-15)
+# cv2.imshow('minus_img', minus_img)
+
+# minus from already modifyid image white background from grey image
+minus_img2 = minus_trshhold_white(grey_img=grey_img, apply_img=minus_img, trashhold=4401, param2=-15)
 cv2.imshow('minus_img 2', minus_img2)
+
+# minus from already modifyid image white background from grey image
+minus_img3 = minus_trshhold_white(grey_img=minus_img2, trashhold=323, param2=-45)
+cv2.imshow('minus_img 3', minus_img3)
+
 # invert
 # for rowi in xrange(len(minus_img)):
 #     for columni in xrange(len(minus_img[0])):
