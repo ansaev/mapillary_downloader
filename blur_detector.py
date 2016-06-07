@@ -82,7 +82,7 @@ def minus_trshhold_white(grey_img, trashhold, param2, apply_img=None):
 
 def minus_trshhold_black(grey_img, trashhold, param2):
     adaptive = cv2.adaptiveThreshold(grey_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, trashhold, param2)
-    cv2.imshow('adaptive_'+str(trashhold), adaptive)
+    # cv2.imshow('adaptive_'+str(trashhold), adaptive)
 
     minus_img = grey_img.copy()
     row_len = len(adaptive)
@@ -93,41 +93,77 @@ def minus_trshhold_black(grey_img, trashhold, param2):
     return minus_img
 
 # read img
-image_src = cv2.imread('6.jpg')
+image_src = cv2.imread('4.jpg')
 # make img grey
 grey_img = cv2.cvtColor(image_src, cv2.COLOR_BGR2GRAY)
 cv2.imshow('grey_img', grey_img)
 
 # minus black background
-minus_img = minus_trshhold_black(grey_img=grey_img,trashhold=221, param2=-5)
-# cv2.imshow('minus_img', minus_img)
+minus_img = minus_trshhold_black(grey_img=grey_img,trashhold=221, param2=-14)
+cv2.imshow('minus_img', minus_img)
 
 # minus from already modifyid image white background from grey image
 minus_img2 = minus_trshhold_white(grey_img=grey_img, apply_img=minus_img, trashhold=4401, param2=-15)
 cv2.imshow('minus_img 2', minus_img2)
 
 # minus from already modifyid image white background from grey image
-minus_img3 = minus_trshhold_white(grey_img=minus_img2, trashhold=323, param2=-45)
+minus_img3 = minus_trshhold_white(grey_img=minus_img2, trashhold=135, param2=-56)
+# minus_img3 = minus_img2
 cv2.imshow('minus_img 3', minus_img3)
 
-# invert
-# for rowi in xrange(len(minus_img)):
-#     for columni in xrange(len(minus_img[0])):
-#         minus_img[rowi][columni] = minus_img[rowi][columni] if minus_img[rowi][columni] > 5 else 255
-# cv2.imshow('minus_img 1 invert', minus_img)
+image, contours, hierarchy = cv2.findContours(minus_img3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+pass_contours = []
+rejected_conturs = []
 
-# # count laplaciion factor
-# laplacian_calues_img = find_bad_blur(image=minus_img, row_len=4, cell_len=4)
+def count_length(point1, point2):
+    return ((point2[0]-point1[0])**2+(point2[1]-point1[1])**2)**0.5
+
+for contour in contours:
+    rect = cv2.minAreaRect(contour)
+    box = cv2.boxPoints(rect)
+    box = numpy.int0(box)
+    # count area sides
+    a = count_length(box[0], box[1])
+    b = count_length(box[1], box[2] )
+    # calculate ratio
+    if a == 0 or b == 0:
+        ratio = 0
+    else:
+        ratio = b/a if b > a else a/b
+
+    if not (1.5 < ratio < 7):
+        rejected_conturs.append(contour)
+        continue
+    # square of rectangle
+    square = int(a*b)
+    if not (7000 > square > 500):
+        rejected_conturs.append(contour)
+        continue
+    # density of rectangle
+    density = float(len(contour))/float(square) if square != 0 else -1.0
+    if not density > 0.09:
+        rejected_conturs.append(contour)
+        continue
+
+    pass_contours.append(numpy.array([box]))
+    # cv2.drawContours(image_src,[box],-1,(0,255,255),0)
+    # window_name = 'rect: '+str(rect)
+    # cv2.imshow(window_name, image_src)
+    print('rect' , rect,'square', square, 'ratio', ratio,'points', len(contour), 'density', density)
+    print('box' , box)
+    # print('contour' , contour)
+    # cv2.waitKey(0)
+    # cv2.destroyWindow(window_name)
+
+
+
+# count laplaciion factor
+# laplacian_calues_img = find_bad_blur(image=grey_img, row_len=4, cell_len=4)
 # cv2.imshow('laplacian_calues_img', laplacian_calues_img)
 
-# minus_img2 = minus_trshhold(grey_img=minus_img,trashhold=999)
-
-# img_th = cv2.adaptiveThreshold(minus_img2,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
-# image, contours, hierarchy = cv2.findContours(img_th, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-# cv2.drawContours(image_src, contours, -1, (0,255,255), 0)
-# cv2.imshow('image_src conturs', image_src)
-# cv2.drawContours(image, contours, -1, (0,255,255), 0)
-
+cv2.drawContours(image_src, pass_contours, -1, (0,255,0), 0)
+cv2.drawContours(image_src, rejected_conturs, -1, (0,0,255), 0)
+cv2.imshow('image_src conturs', image_src)
 # find_blur(minus_img2, 20, 100, 8)
 
 cv2.waitKey(0)
