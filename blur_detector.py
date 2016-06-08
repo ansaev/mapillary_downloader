@@ -1,5 +1,9 @@
 import numpy
 import cv2
+import matplotlib
+matplotlib.rcsetup.all_backends
+matplotlib.use('GTK')
+from matplotlib import pyplot as plt
 
 def find_bad_blur(image, row_len, cell_len):
     values = []
@@ -23,7 +27,7 @@ def find_blur(image, row_len, cell_len, step):
         for cell_pointer in xrange(int((len(image[0]) - cell_len)/step) + 1):
             block = [[image[row_index][cell_index] for cell_index in xrange(cell_pointer*step, cell_pointer*step+cell_len)] for row_index in xrange(row_pointer*step, row_pointer*step + row_len)]
             block = numpy.array(block)
-            val = val = cv2.Laplacian(block, cv2.CV_64F).var()
+            val = cv2.Laplacian(block, cv2.CV_64F).var()
             values.append({'row_pointer': row_pointer, 'cell_pointer': cell_pointer, 'val':val})
 
     # search min value
@@ -70,7 +74,7 @@ def find_blur(image, row_len, cell_len, step):
 def minus_trshhold_white(grey_img, trashhold, param2, apply_img=None):
     apply_img = grey_img if apply_img is None else apply_img
     adaptive = cv2.adaptiveThreshold(grey_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, trashhold, param2)
-    cv2.imshow('adaptive_'+str(trashhold), adaptive)
+    # cv2.imshow('adaptive_'+str(trashhold), adaptive)
 
     minus_img = apply_img.copy()
     row_len = len(adaptive)
@@ -100,11 +104,11 @@ cv2.imshow('grey_img', grey_img)
 
 # minus black background
 minus_img = minus_trshhold_black(grey_img=grey_img,trashhold=221, param2=-14)
-cv2.imshow('minus_img', minus_img)
+# cv2.imshow('minus_img', minus_img)
 
 # minus from already modifyid image white background from grey image
 minus_img2 = minus_trshhold_white(grey_img=grey_img, apply_img=minus_img, trashhold=4401, param2=-15)
-cv2.imshow('minus_img 2', minus_img2)
+# cv2.imshow('minus_img 2', minus_img2)
 
 # minus from already modifyid image white background from grey image
 minus_img3 = minus_trshhold_white(grey_img=minus_img2, trashhold=135, param2=-56)
@@ -144,16 +148,33 @@ for contour in contours:
     if not density > 0.09:
         rejected_conturs.append(contour)
         continue
-
+    # lets calculate laplacian
+    xs = [box[i][0] for i in xrange(len(box))]
+    ys = [box[i][1] for i in xrange(len(box))]
+    block = grey_img[min(ys):max(ys), min(xs):max(xs)]
+    laacian = cv2.Laplacian(block, cv2.CV_64F)
+    if laacian is None:
+        rejected_conturs.append(contour)
+        continue
+    val = laacian.var()
+    if val > 150:
+        rejected_conturs.append(contour)
+        continue
+    # include in blure areas
     pass_contours.append(numpy.array([box]))
-    # cv2.drawContours(image_src,[box],-1,(0,255,255),0)
-    # window_name = 'rect: '+str(rect)
-    # cv2.imshow(window_name, image_src)
+    print('laplacian: '+str(val))
     print('rect' , rect,'square', square, 'ratio', ratio,'points', len(contour), 'density', density)
     print('box' , box)
-    # print('contour' , contour)
-    # cv2.waitKey(0)
-    # cv2.destroyWindow(window_name)
+    # show iterations images
+    cv2.drawContours(image_src,[box],-1,(0,255,255),0)
+    window_name = 'rect: '+str(rect)
+    window_name1 = 'laplacian: '+str(val)
+    cv2.imshow(window_name1, block)
+    cv2.imshow(window_name, image_src)
+    plt.hist(block.ravel(),256,[0,256]); plt.show()
+    cv2.waitKey(0)
+    cv2.destroyWindow(window_name)
+    cv2.destroyWindow(window_name1)
 
 
 
