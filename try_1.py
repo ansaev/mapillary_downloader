@@ -59,6 +59,25 @@ def detect_blur(contour, grey_img):
     y_len = max(ys) - min(ys)
     if y_len > x_len:
         return numpy.array([box]), False
+    # ortagonality
+    xdif_1 = box[0][0] - box[1][0] if box[0][0] > box[1][0] else box[1][0] - box[0][0]
+    ydif_1 = box[0][1] - box[1][1] if box[0][1] > box[1][1] else box[1][1] - box[0][1]
+
+    xdif_2 = box[1][0] - box[2][0] if box[1][0] > box[2][0] else box[2][0] - box[1][0]
+    ydif_2 = box[1][1] - box[2][1] if box[1][1] > box[2][1] else box[2][1] - box[1][1]
+    afordable_diff = 5
+    if xdif_1 > ydif_1:
+        if ydif_1 > afordable_diff:
+            return numpy.array([box]), False
+    elif xdif_1 > afordable_diff:
+            return numpy.array([box]), False
+
+    if xdif_2 > ydif_2:
+        if ydif_2 > afordable_diff:
+            return numpy.array([box]), False
+    elif xdif_2 > afordable_diff:
+            return numpy.array([box]), False
+
     # include in blure areas
     print('laplacian: '+str(val))
     print('rect' , rect,'square', square, 'ratio', ratio,'points', len(contour))
