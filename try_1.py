@@ -86,9 +86,8 @@ def detect_blur(contour, grey_img):
 
 
 def find_blur(img):
-    image_src = img.copy()
     # make img grey
-    grey_img = cv2.cvtColor(image_src, cv2.COLOR_BGR2GRAY)
+    grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # delete sky and light objects
     blur_1=cv2.GaussianBlur(grey_img,(5,5),22)
     adaptive_1 = cv2.adaptiveThreshold(blur_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 2241, -21)
@@ -110,9 +109,20 @@ def find_blur(img):
             pass_contours.append(box)
         else:
             rejected_conturs.append(box)
+    return pass_contours, rejected_conturs
+
+def evluate_conturs(pass_contours, source_contours):
+    return 0
+
+
+def process_img(img, data):
+    pass_contours, rejected_conturs = find_blur(img)
     # draw contours
+    image_src = img.copy()
     cv2.drawContours(image_src, pass_contours, -1, (0,255,0), 0)
     cv2.drawContours(image_src, rejected_conturs, -1, (0,0,255), 0)
+    eveluation = evluate_conturs(pass_contours, data)
+    print('eveluation', eveluation)
     return image_src
 
 for i in range(8)[1:]:
@@ -120,7 +130,7 @@ for i in range(8)[1:]:
     name = str(i) + '.jpg'
     print(name)
     img = cv2.imread(name)
-    new_img = find_blur(img)
+    new_img = process_img(img, [])
     cv2.imshow('conturs ' + name, new_img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
