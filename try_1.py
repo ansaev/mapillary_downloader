@@ -42,7 +42,7 @@ def detect_blur(contour, grey_img):
         return numpy.array([box]), False
     # square of rectangle
     square = int(width*height)
-    if not (6000 > square > 500):
+    if not ( square > 500):
         return numpy.array([box]), False
     # laplacian
     xs = [box[i][0] for i in xrange(len(box))]
@@ -94,11 +94,14 @@ def find_blur(img):
     se_1=cv2.getStructuringElement(cv2.MORPH_RECT,(23,5))
     closing_1=cv2.morphologyEx(adaptive_1, cv2.MORPH_CLOSE, se_1)
     minus_1 = minus_background_white(grey_img, closing_1)
+    # cv2.imshow('minus_1', minus_1)
     # delete black background from grey img
-    adaptive_2 = cv2.adaptiveThreshold(blur_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 1111, 22)
-    minus_2 = minus_background_black(minus_1, adaptive_2)
+    # adaptive_2 = cv2.adaptiveThreshold(blur_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 1111, 22)
+    # minus_2 = minus_background_black(minus_1, adaptive_2)
+    # cv2.imshow('minus_2', minus_2)
     # prepera new img for detection
-    adaptive_search = cv2.adaptiveThreshold(minus_2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 211, -11) # 5
+    adaptive_search = cv2.adaptiveThreshold(minus_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 511, -21) # 5
+    # cv2.imshow('adaptive_search', adaptive_search)
     # detect counturs
     image, contours, hierarchy = cv2.findContours(adaptive_search, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     pass_contours = []
@@ -111,20 +114,51 @@ def find_blur(img):
             rejected_conturs.append(box)
     return pass_contours, rejected_conturs
 
-def evluate_conturs(pass_contours, source_contours):
-    print('pass_contours', pass_contours, 'source_contours', source_contours )
-    return 0
+def evluate_conturs(pass_contours, source_contours, img):
+    # my_img = img.copy()
+    print('pass_contours', pass_contours, 'source_contours', source_contours)
+    square_union = 0
+    square_intersection = 0
+    for true_contour in source_contours:
+        true_square = abs((true_contour[0][0] - true_contour[2][0]) * (true_contour[2][1] - true_contour[0][1]))
+        square_union += true_square
+        for pass_contour in pass_contours:
+            pass_square = abs((pass_contour[0][2][0] - pass_contour[0][0][0]) * (pass_contour[0][0][1] - pass_contour[0][2][1]))
+            print('pass_square', pass_square, 'true_square', true_square)
+            print('true_contour', true_contour, 'pass_contour', pass_contour)
+
+            if (pass_contour[0][2][0] <= true_contour[2][0]) and (true_contour[0][0] <= pass_contour[0][0][0]) and (pass_contour[0][2][1] <= true_contour[2][1]) and (true_contour[0][1] <= pass_contour[0][0][1]):
+                # calc contour
+                top_left_x = pass_contour[0][2][0] if pass_contour[0][2][0] >= true_contour[0][0] else true_contour[0][0]
+                top_left_y = pass_contour[0][2][1] if pass_contour[0][2][1] >= true_contour[0][1] else true_contour[0][1]
+                bottom_right_x = pass_contour[0][0][0] if pass_contour[0][0][0] <= true_contour[2][0] else true_contour[2][0]
+                bottom_right_y = pass_contour[0][0][1] if pass_contour[0][0][1] <= true_contour[2][1] else true_contour[2][1]
+                square = abs((bottom_right_x - top_left_x) * (top_left_y - bottom_right_y))
+                print('ok in', square)
+                square_union += pass_square -square
+                square_intersection += square
+            else:
+                square_union += pass_square
+            # cv2.drawContours(my_img, [numpy.array(true_contour)], -1, (0,255,0), 0)
+            # cv2.drawContours(my_img, [pass_contour], -1, (0,0,255), 0)
+            # cv2.imshow('contour', my_img)
+            # cv2.waitKey(0)
+            # cv2.destroyWindow('contour')
+
+    evaluation = (float(square_intersection * 100)) / float(square_union)
+    return evaluation
 
 
 def process_img(img, data):
     pass_contours, rejected_conturs = find_blur(img)
     # draw contours
     image_src = img.copy()
+    source_contours = [numpy.array(d) for d in data]
     cv2.drawContours(image_src, pass_contours, -1, (0,255,0), 0)
-    cv2.drawContours(image_src, rejected_conturs, -1, (0,0,255), 0)
-    eveluation = evluate_conturs(pass_contours, data)
+    cv2.drawContours(image_src, source_contours, -1, (0,255,255), 0)
+    eveluation = evluate_conturs(pass_contours, data, img=img)
     print('eveluation', eveluation)
-    return image_src
+    return image_src, eveluation
 
 # for i in range(8)[1:]:
 #     # read img
