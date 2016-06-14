@@ -79,9 +79,9 @@ def detect_blur(contour, grey_img):
             return numpy.array([box]), False
 
     # include in blure areas
-    print('laplacian: '+str(val))
-    print('rect' , rect,'square', square, 'ratio', ratio,'points', len(contour))
-    print('box' , box)
+    # print('laplacian: '+str(val))
+    # print('rect' , rect,'square', square, 'ratio', ratio,'points', len(contour))
+    # print('box' , box)
     return numpy.array([box]), True
 
 
@@ -112,6 +112,7 @@ def find_blur(img):
     return pass_contours, rejected_conturs
 
 def evluate_conturs(pass_contours, source_contours):
+    print('pass_contours', pass_contours, 'source_contours', source_contours )
     return 0
 
 
@@ -125,12 +126,12 @@ def process_img(img, data):
     print('eveluation', eveluation)
     return image_src
 
-for i in range(8)[1:]:
-    # read img
-    name = str(i) + '.jpg'
-    print(name)
-    img = cv2.imread(name)
-    new_img = process_img(img, [])
-    cv2.imshow('conturs ' + name, new_img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# for i in range(8)[1:]:
+#     # read img
+#     name = str(i) + '.jpg'
+#     print(name)
+#     img = cv2.imread(name)
+#     new_img = process_img(img, [])
+#     cv2.imshow('conturs ' + name, new_img)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()

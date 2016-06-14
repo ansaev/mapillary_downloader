@@ -1,61 +1,24 @@
-# find and download images with blur
-# find some response_json
 import json
 import os
-import requests
-from config import config, DOWNLOAD_SEQUENCES_PATH
+import numpy
+import cv2
 
-def save_blury_data(response_json):
-    for item in response_json:
-        data = item['b']['blurs']
-        if len(data) < 1:
-            continue
-        # filter only big blurs
-        valid_data = False
-        for id in xrange(len(data)):
-            box = [
-                [int(data[id]['rect'][2]*X_RES), int(data[id]['rect'][3]*Y_RES)],
-                [int(data[id]['rect'][0]*X_RES), int(data[id]['rect'][3]*Y_RES)],
-                [int(data[id]['rect'][0]*X_RES), int(data[id]['rect'][1]*Y_RES)],
-                [int(data[id]['rect'][2]*X_RES), int(data[id]['rect'][1]*Y_RES)],
-            ]
-            square = (box[0][0] - box[1][0]) * (box[1][1] - box[2][1])
-            data[id]['box'] = box
-            data[id]['square'] = square
-            if square/SQUARE > PRCNT:
-                valid_data = True
-        if not valid_data:
-            continue
-        # save_img
-        img_responce = requests.get(url='http://d1cuyjsrcm0gby.cloudfront.net/%s/thumb-2048.jpg' % item['key'])
-        if not img_responce._content:
-            continue
-        with open(DIRECTORY + '/' + item['key'] + 'jpg', 'wb') as file:
-            file.write(img_responce._content)
-        with open(DIRECTORY + '/' + item['key'], 'w') as file:
-            file.write(json.dumps(data))
+from try_1 import process_img
 
-
-X_RES = 2048
-Y_RES = 1536
-SQUARE = X_RES * Y_RES
-PRCNT = 0.002
-DIRECTORY = DOWNLOAD_SEQUENCES_PATH + 'blury_images'
-try:
-    os.makedirs(DIRECTORY)
-except OSError:
-    pass
-images_num = 100
-responce = requests.get('https://a.mapillary.com/v2/search/b', params={
-    'limit': images_num,
-    'page': 0,
-    'client_id': config['CLIENT_ID']
-})
-response_json = responce.json()['bs']
-print('response_json', responce.url, len(response_json))
-save_blury_data(response_json)
-
-
-
-
+IMAGES_DIRECTORY = '/home/ansaev/repos/mapillary_downloader/downloads/blury_images/'
+files  = os.listdir(IMAGES_DIRECTORY)
+images = [f for f in files if f[-4:] == '.jpg']
+images = images[:3]
+print(images)
+for im in images:
+    img = cv2.imread(IMAGES_DIRECTORY + im)
+    with open(IMAGES_DIRECTORY + im[:-4] + '.json', 'r') as file:
+        data = file.readline()
+    data = json.loads(data)
+    grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    evaluation_data = [d ['box'] for d in data]
+    new_img = process_img(img, data=evaluation_data)
+    # cv2.imshow(im, new_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 

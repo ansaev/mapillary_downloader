@@ -8,7 +8,7 @@ import sys
 X_RES = 2048
 Y_RES = 1536
 SQUARE = X_RES * Y_RES
-PRCNT = 0.02
+PRCNT = 0.007
 DIRECTORY = DOWNLOAD_SEQUENCES_PATH + 'blury_images'
 try:
     os.makedirs(DIRECTORY)
@@ -23,10 +23,10 @@ def validate_img(item):
     valid_data = False
     for id in xrange(len(data)):
         box = [
-            [int(data[id]['rect'][2]*X_RES), int(data[id]['rect'][3]*Y_RES)],
-            [int(data[id]['rect'][0]*X_RES), int(data[id]['rect'][3]*Y_RES)],
-            [int(data[id]['rect'][0]*X_RES), int(data[id]['rect'][1]*Y_RES)],
-            [int(data[id]['rect'][2]*X_RES), int(data[id]['rect'][1]*Y_RES)],
+                [int(data[id]['rect'][0] * X_RES), int(data[id]['rect'][1] * Y_RES)],
+                [int(data[id]['rect'][2] * X_RES), int(data[id]['rect'][1] * Y_RES)],
+                [int(data[id]['rect'][2] * X_RES), int(data[id]['rect'][3] * Y_RES)],
+                [int(data[id]['rect'][0] * X_RES), int(data[id]['rect'][3] * Y_RES)]
         ]
         square = (box[0][0] - box[1][0]) * (box[1][1] - box[2][1])
         data[id]['box'] = box
@@ -51,10 +51,10 @@ def download_img(key):
     img_responce = requests.get(url='http://d1cuyjsrcm0gby.cloudfront.net/%s/thumb-2048.jpg' % key)
     if not img_responce._content:
         return False
-    with open(DIRECTORY + '/' + key + 'jpg', 'wb') as file:
+    with open(DIRECTORY + '/' + key + '.jpg', 'wb') as file:
         file.write(img_responce._content)
         # save_blur data
-    with open(DIRECTORY + '/' + key, 'w') as file:
+    with open(DIRECTORY + '/' + key + '.json', 'w') as file:
             file.write(json.dumps(blur_data))
     return True
 
@@ -86,4 +86,4 @@ def download_blury_imgs(target_number, max_lat, max_lon, min_lat, min_lon):
 
 if __name__ == "__main__":
     print('max_lat, max_lon, min_lat, min_lon', sys.argv[1:])
-    download_blury_imgs(100, *sys.argv[1:])
+    download_blury_imgs(9999, *sys.argv[1:])
