@@ -42,7 +42,7 @@ def detect_blur(contour, grey_img):
         return numpy.array([box]), False
     # square of rectangle
     square = int(width*height)
-    if not ( square > 500):
+    if not (60000 > square > 500):
         return numpy.array([box]), False
     # laplacian
     xs = [box[i][0] for i in xrange(len(box))]
@@ -87,21 +87,34 @@ def detect_blur(contour, grey_img):
 
 def find_blur(img):
     # make img grey
-    grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    grey_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    # try_1 = cv2.Sobel(grey_img, cv2.CV_8U, 0, 1, ksize=5)
+    # se_1=cv2.getStructuringElement(cv2.MORPH_RECT,(23,5))
+    # # try_1 = cv2.adaptiveThreshold(try_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 4241, -6)
+    # try_2=cv2.morphologyEx(try_1, cv2.MORPH_CLOSE, se_1)
+    # try_2 = cv2.adaptiveThreshold(try_2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 2241, -6)
+    # minus_1 = minus_background_white(grey_img, try_2)
+    # # minus_1_morf=cv2.morphologyEx(minus_1, cv2.MORPH_CLOSE, se_1)
+    # # minus_1_morf_my = minus_1.copy()
+    # try_3 = cv2.Sobel(grey_img, cv2.CV_8U, 1, 0, ksize=5)
+    # try_4=cv2.morphologyEx(try_3, cv2.MORPH_CLOSE, se_1)
+    # try_4 = cv2.adaptiveThreshold(try_4, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 2241, -6)
+    # minus_2 = minus_background_white(minus_1, try_4)
+    # minus_2_my = minus_2.copy()
+    # other
     # delete sky and light objects
     blur_1=cv2.GaussianBlur(grey_img,(5,5),22)
-    adaptive_1 = cv2.adaptiveThreshold(blur_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 2241, -21)
+    adaptive_1 = cv2.adaptiveThreshold(blur_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 4241, -21)
     se_1=cv2.getStructuringElement(cv2.MORPH_RECT,(23,5))
     closing_1=cv2.morphologyEx(adaptive_1, cv2.MORPH_CLOSE, se_1)
     minus_1 = minus_background_white(grey_img, closing_1)
-    # cv2.imshow('minus_1', minus_1)
     # delete black background from grey img
-    # adaptive_2 = cv2.adaptiveThreshold(blur_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 1111, 22)
-    # minus_2 = minus_background_black(minus_1, adaptive_2)
-    # cv2.imshow('minus_2', minus_2)
+    adaptive_2 = cv2.adaptiveThreshold(blur_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 1111, 22)
+    minus_2 = minus_background_black(minus_1, adaptive_2)
+    # minus_2_my = minus_2.copy()
     # prepera new img for detection
-    adaptive_search = cv2.adaptiveThreshold(minus_1, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 511, -21) # 5
-    # cv2.imshow('adaptive_search', adaptive_search)
+    adaptive_search = cv2.adaptiveThreshold(minus_2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, -5 ) # 5
+    my_addaptive = adaptive_search.copy()
     # detect counturs
     image, contours, hierarchy = cv2.findContours(adaptive_search, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     pass_contours = []
@@ -112,11 +125,23 @@ def find_blur(img):
             pass_contours.append(box)
         else:
             rejected_conturs.append(box)
-    return pass_contours, rejected_conturs
+    return pass_contours, rejected_conturs , \
+           {
+               # '1': closing_1,
+               # '3': adaptive_2,
+               # # 'try_1': try_1,
+               # '2': minus_1,
+               # # 'try_2': try_2,
+               # # 'try_3': try_3,
+               # # 'try_4': try_4,
+               # '4': minus_2_my,
+               # # 'try_5': try_5_my,
+               #  '5': my_addaptive,
+           }
 
 def evluate_conturs(pass_contours, source_contours, img):
     # my_img = img.copy()
-    print('pass_contours', pass_contours, 'source_contours', source_contours)
+    # print('pass_contours', pass_contours, 'source_contours', source_contours)
     square_union = 0
     square_intersection = 0
     for true_contour in source_contours:
@@ -124,8 +149,8 @@ def evluate_conturs(pass_contours, source_contours, img):
         square_union += true_square
         for pass_contour in pass_contours:
             pass_square = abs((pass_contour[0][2][0] - pass_contour[0][0][0]) * (pass_contour[0][0][1] - pass_contour[0][2][1]))
-            print('pass_square', pass_square, 'true_square', true_square)
-            print('true_contour', true_contour, 'pass_contour', pass_contour)
+            # print('pass_square', pass_square, 'true_square', true_square)
+            # print('true_contour', true_contour, 'pass_contour', pass_contour)
 
             if (pass_contour[0][2][0] <= true_contour[2][0]) and (true_contour[0][0] <= pass_contour[0][0][0]) and (pass_contour[0][2][1] <= true_contour[2][1]) and (true_contour[0][1] <= pass_contour[0][0][1]):
                 # calc contour
@@ -134,7 +159,7 @@ def evluate_conturs(pass_contours, source_contours, img):
                 bottom_right_x = pass_contour[0][0][0] if pass_contour[0][0][0] <= true_contour[2][0] else true_contour[2][0]
                 bottom_right_y = pass_contour[0][0][1] if pass_contour[0][0][1] <= true_contour[2][1] else true_contour[2][1]
                 square = abs((bottom_right_x - top_left_x) * (top_left_y - bottom_right_y))
-                print('ok in', square)
+                # print('ok in', square)
                 square_union += pass_square -square
                 square_intersection += square
             else:
@@ -150,15 +175,16 @@ def evluate_conturs(pass_contours, source_contours, img):
 
 
 def process_img(img, data):
-    pass_contours, rejected_conturs = find_blur(img)
+    pass_contours, rejected_conturs, images = find_blur(img)
     # draw contours
     image_src = img.copy()
     source_contours = [numpy.array(d) for d in data]
-    cv2.drawContours(image_src, pass_contours, -1, (0,255,0), 0)
     cv2.drawContours(image_src, source_contours, -1, (0,255,255), 0)
+    cv2.drawContours(image_src, rejected_conturs, -1, (0,0,255), 0)
+    cv2.drawContours(image_src, pass_contours, -1, (0,255,0), 0)
     eveluation = evluate_conturs(pass_contours, data, img=img)
     print('eveluation', eveluation)
-    return image_src, eveluation
+    return image_src, eveluation, images
 
 # for i in range(8)[1:]:
 #     # read img
